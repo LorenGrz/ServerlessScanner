@@ -1,0 +1,112 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  Serverless Scanner — CEO/CTO dashboard for identifying serverless migration opportunities.
+
+Resources:
+
+  ExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      PermissionsBoundary: arn:aws:iam::164865665141:policy/hackathon-boundary
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+
+  ScannerFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: serverless-scanner
+      Handler: index.handler
+      Runtime: nodejs22.x
+      Architectures: [arm64]
+      MemorySize: 256
+      Timeout: 120
+      CodeUri: backend/src/
+      Role: !GetAtt ExecutionRole.Arn
+
+  Api:
+    Type: AWS::ApiGateway::RestApi
+    Properties:
+      Name: serverless-scanner-api
+
+  # Proxy resource — catches every path segment
+  ProxyResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref Api
+      ParentId: !GetAtt Api.RootResourceId
+      PathPart: "{proxy+}"
+
+  # GET / — serves index.html (SPA entry)
+  RootGet:
+    Type: AWS::ApiGateway::Method
+    # checkov:skip=CKV_AWS_59: Public demo in short-lived workshop account.
+    Properties:
+      RestApiId: !Ref Api
+      ResourceId: !GetAtt Api.RootResourceId
+      HttpMethod: GET
+      AuthorizationType: NONE
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        ResponseTransferMode: STREAM
+        TimeoutInMillis: 29000
+        Uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2021-11-15/functions/${ScannerFunction.Arn}/response-streaming-invocations
+
+  # ANY /{proxy+} — assets, SPA routes, and API calls
+  ProxyAny:
+    Type: AWS::ApiGateway::Method
+    # checkov:skip=CKV_AWS_59: Public demo in short-lived workshop account.
+    Properties:
+      RestApiId: !Ref Api
+      ResourceId: !Ref ProxyResource
+      HttpMethod: ANY
+      AuthorizationType: NONE
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        ResponseTransferMode: STREAM
+        TimeoutInMillis: 29000
+        Uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2021-11-15/functions/${ScannerFunction.Arn}/response-streaming-invocations
+
+  Deployment:
+    Type: AWS::ApiGateway::Deployment
+    DependsOn: [RootGet, ProxyAny]
+    Properties:
+      RestApiId: !Ref Api
+
+  AccessLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: /aws/apigateway/serverless-scanner
+      RetentionInDays: 7
+
+  Stage:
+    Type: AWS::ApiGateway::Stage
+    Properties:
+      RestApiId: !Ref Api
+      DeploymentId: !Ref Deployment
+      StageName: prod
+      AccessLogSetting:
+        DestinationArn: !GetAtt AccessLogGroup.Arn
+        Format: '{"requestId":"$context.requestId","ip":"$context.identity.sourceIp","requestTime":"$context.requestTime","httpMethod":"$context.httpMethod","routeKey":"$context.resourcePath","status":"$context.status","responseLength":"$context.responseLength"}'
+
+  ApiInvokePermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !GetAtt ScannerFunction.Arn
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${Api}/*
+
+Outputs:
+  AppUrl:
+    Description: Open this URL to launch the Serverless Scanner app
+    Value: !Sub "https://${Api}.execute-api.${AWS::Region}.amazonaws.com/prod/"
