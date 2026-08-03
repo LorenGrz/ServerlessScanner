@@ -5,10 +5,15 @@ Description: >
 
 Resources:
 
+  LambdaLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: /aws/lambda/serverless-scanner
+      RetentionInDays: 7
+
   ExecutionRole:
     Type: AWS::IAM::Role
     Properties:
-      PermissionsBoundary: arn:aws:iam::164865665141:policy/hackathon-boundary
       AssumeRolePolicyDocument:
         Version: "2012-10-17"
         Statement:
@@ -82,21 +87,12 @@ Resources:
     Properties:
       RestApiId: !Ref Api
 
-  AccessLogGroup:
-    Type: AWS::Logs::LogGroup
-    Properties:
-      LogGroupName: /aws/apigateway/serverless-scanner
-      RetentionInDays: 7
-
   Stage:
     Type: AWS::ApiGateway::Stage
     Properties:
       RestApiId: !Ref Api
       DeploymentId: !Ref Deployment
       StageName: prod
-      AccessLogSetting:
-        DestinationArn: !GetAtt AccessLogGroup.Arn
-        Format: '{"requestId":"$context.requestId","ip":"$context.identity.sourceIp","requestTime":"$context.requestTime","httpMethod":"$context.httpMethod","routeKey":"$context.resourcePath","status":"$context.status","responseLength":"$context.responseLength"}'
 
   ApiInvokePermission:
     Type: AWS::Lambda::Permission
