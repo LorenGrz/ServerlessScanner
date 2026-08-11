@@ -61,9 +61,7 @@ Resources:
       Integration:
         Type: AWS_PROXY
         IntegrationHttpMethod: POST
-        ResponseTransferMode: STREAM
-        TimeoutInMillis: 29000
-        Uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2021-11-15/functions/${ScannerFunction.Arn}/response-streaming-invocations
+        Uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ScannerFunction.Arn}/invocations
 
   # ANY /{proxy+} — assets, SPA routes, and API calls
   ProxyAny:
@@ -77,9 +75,7 @@ Resources:
       Integration:
         Type: AWS_PROXY
         IntegrationHttpMethod: POST
-        ResponseTransferMode: STREAM
-        TimeoutInMillis: 29000
-        Uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2021-11-15/functions/${ScannerFunction.Arn}/response-streaming-invocations
+        Uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ScannerFunction.Arn}/invocations
 
   Deployment:
     Type: AWS::ApiGateway::Deployment

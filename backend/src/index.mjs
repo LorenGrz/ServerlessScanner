@@ -5,6 +5,8 @@ import { fileURLToPath } from 'url'
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const PUBLIC_DIR = join(__dirname, 'public')
 
+const TEXT_TYPES = new Set(['text/html', 'application/javascript', 'text/css', 'application/json', 'image/svg+xml', 'font/woff', 'font/woff2'])
+
 const MIME = {
   '.html': 'text/html',
   '.js': 'application/javascript',
@@ -38,48 +40,48 @@ const MOCK_RESULT = {
   ],
 }
 
-function serveFile(filePath, responseStream) {
-  const ext = extname(filePath)
-  const contentType = MIME[ext] ?? 'application/octet-stream'
-  const body = readFileSync(filePath)
-  responseStream.setContentType(contentType)
-  responseStream.write(body)
-}
+const OK = (body, contentType = 'text/html', binary = false) => ({
+  statusCode: 200,
+  headers: { 'Content-Type': contentType, 'Access-Control-Allow-Origin': '*' },
+  body: binary ? body.toString('base64') : (typeof body === 'string' ? body : Buffer.isBuffer(body) ? body.toString('utf8') : JSON.stringify(body)),
+  isBase64Encoded: binary,
+})
 
-export const handler = awslambda.streamifyResponse(async (event, responseStream) => {
+export const handler = async (event) => {
   const method = event.httpMethod ?? event.requestContext?.http?.method ?? 'GET'
   const rawPath = event.path ?? event.rawPath ?? '/'
 
-  // API routes
-  if (method === 'POST' && rawPath === '/api/scan') {
+  if (method === 'OPTIONS') {
+    return { statusCode: 204, headers: { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Methods': 'GET,POST,OPTIONS', 'Access-Control-Allow-Headers': 'Content-Type' }, body: '' }
+  }
+
+  if (method === 'POST' && rawPath === '/prod/api/scan') {
     await new Promise(r => setTimeout(r, 80))
-    responseStream.setContentType('application/json')
-    responseStream.write(JSON.stringify(MOCK_RESULT))
-    responseStream.end()
-    return
+    return OK(MOCK_RESULT, 'application/json')
   }
 
-  if (method === 'POST' && rawPath === '/api/export') {
-    responseStream.setContentType('application/json')
-    responseStream.write(JSON.stringify({ url: 'mock-report.pdf', message: 'Report generated successfully' }))
-    responseStream.end()
-    return
+  if (method === 'POST' && rawPath === '/prod/api/export') {
+    return OK({ url: 'mock-report.pdf', message: 'Report generated successfully' }, 'application/json')
   }
 
-  // Static assets (exact file match)
-  const assetPath = join(PUBLIC_DIR, rawPath)
+  // Strip /prod prefix if present (API Gateway stage)
+  const filePath = rawPath.replace(/^\/prod/, '') || '/'
+
+  // Static assets
+  const assetPath = join(PUBLIC_DIR, filePath)
   if (existsSync(assetPath) && !assetPath.endsWith('/')) {
     try {
-      serveFile(assetPath, responseStream)
-      responseStream.end()
-      return
+      const ext = extname(assetPath)
+      const contentType = MIME[ext] ?? 'application/octet-stream'
+      const buf = readFileSync(assetPath)
+      const binary = !TEXT_TYPES.has(contentType)
+      return OK(buf, contentType, binary)
     } catch {
       // fall through to SPA fallback
     }
   }
 
-  // SPA fallback — all other GETs get index.html
+  // SPA fallback
   const indexPath = join(PUBLIC_DIR, 'index.html')
-  serveFile(indexPath, responseStream)
-  responseStream.end()
-})
+  return OK(readFileSync(indexPath, 'utf8'), 'text/html')
+}
