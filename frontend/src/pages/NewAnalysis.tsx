@@ -1,6 +1,7 @@
 import { useState, useRef, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Layout from '../components/Layout'
+import { useAnalysis } from '../AnalysisContext'
 
 const stackOptions = [
   'React (Frontend)',
@@ -38,6 +39,7 @@ function formatSize(bytes: number): string {
 
 export default function NewAnalysis() {
   const navigate = useNavigate()
+  const { setScanParams } = useAnalysis()
   const dropRef = useRef<HTMLDivElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [isDragOver, setIsDragOver] = useState(false)
@@ -96,7 +98,8 @@ export default function NewAnalysis() {
 
   const handleScan = () => {
     setScanning(true)
-    setTimeout(() => navigate('/progress'), 1200)
+    setScanParams({ productName, stack, painPoints })
+    setTimeout(() => navigate('/progress'), 400)
   }
 
   const readiness = Math.min(100, (productName ? 30 : 0) + Math.min(stack.length * 10, 40) + (files.length > 0 ? 20 : 0) + (painPoints ? 10 : 0))

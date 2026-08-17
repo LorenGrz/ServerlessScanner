@@ -1,7 +1,5 @@
 import Layout from '../components/Layout'
-import { mockAnalysis } from '../data/mockData'
-
-const { roadmap, estimatedAnnualSavings, confidence } = mockAnalysis
+import { useAnalysis } from '../AnalysisContext'
 
 const weekColors = ['bg-primary', 'bg-secondary-container', 'bg-on-tertiary-container']
 const weekTextColors = ['text-on-primary', 'text-on-secondary-container', 'text-white']
@@ -23,6 +21,8 @@ const risks = [
 ]
 
 export default function Roadmap() {
+  const { analysis } = useAnalysis()
+  const { roadmap, estimatedAnnualSavings, confidence } = analysis
   return (
     <Layout title="30-Day Roadmap" subtitle="Email Service Migration — Phase 1">
       <div className="flex flex-col gap-stack-lg">

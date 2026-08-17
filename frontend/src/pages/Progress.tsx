@@ -1,5 +1,7 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useAnalysis } from '../AnalysisContext'
+import { runScan } from '../api'
 
 const steps = [
   { label: 'Reading inputs', icon: 'upload_file', duration: 1200 },
@@ -9,30 +11,79 @@ const steps = [
   { label: 'Generating roadmap', icon: 'route', duration: 1000 },
 ]
 
+const TOTAL_MS = steps.reduce((s, st) => s + st.duration, 0)
+
 export default function Progress() {
   const navigate = useNavigate()
+  const { scanParams, setAnalysis } = useAnalysis()
   const [current, setCurrent] = useState(0)
+  const [error, setError] = useState<string | null>(null)
+  const apiDone = useRef(false)
+  const animDone = useRef(false)
 
+  const tryFinish = () => {
+    if (apiDone.current && animDone.current) {
+      setTimeout(() => navigate('/dashboard'), 400)
+    }
+  }
+
+  // API call
+  useEffect(() => {
+    const params = scanParams ?? { productName: 'Demo Project', stack: [], painPoints: '' }
+    runScan(params)
+      .then(result => {
+        setAnalysis(result)
+        apiDone.current = true
+        tryFinish()
+      })
+      .catch(err => {
+        setError(err.message ?? 'Scan failed')
+      })
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  // Progress animation
   useEffect(() => {
     let idx = 0
     const advance = () => {
       if (idx >= steps.length) {
-        setTimeout(() => navigate('/dashboard'), 600)
+        animDone.current = true
+        tryFinish()
         return
       }
       setCurrent(idx)
+      const delay = steps[idx].duration
       idx++
-      setTimeout(advance, steps[idx - 1]?.duration ?? 1000)
+      setTimeout(advance, delay)
     }
     advance()
-  }, [navigate])
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   const pct = Math.round(((current + 1) / steps.length) * 100)
+  const productName = scanParams?.productName ?? 'Your Project'
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-surface-bright flex flex-col items-center justify-center p-margin-mobile">
+        <div className="w-full max-w-md executive-card rounded-xl p-stack-lg text-center">
+          <span className="material-symbols-outlined text-error text-[48px] icon-filled block mb-4">error</span>
+          <h2 className="text-headline-md font-headline-md text-primary mb-2">Scan Failed</h2>
+          <p className="text-body-sm text-on-surface-variant mb-stack-lg">{error}</p>
+          <button
+            onClick={() => navigate('/new')}
+            className="bg-primary text-on-primary px-6 py-3 rounded-lg font-bold text-label-caps font-label-caps hover:opacity-90 transition-opacity"
+          >
+            Try Again
+          </button>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="min-h-screen bg-surface-bright flex flex-col items-center justify-center p-margin-mobile">
       <div className="w-full max-w-md">
-        {/* Logo */}
         <div className="flex items-center justify-center gap-3 mb-8">
           <div className="w-10 h-10 bg-primary rounded-lg flex items-center justify-center">
             <span className="material-symbols-outlined text-on-primary icon-filled">qr_code_scanner</span>
@@ -43,10 +94,9 @@ export default function Progress() {
         <div className="executive-card rounded-xl p-stack-lg">
           <div className="text-center mb-stack-lg">
             <p className="text-label-caps font-label-caps text-on-surface-variant mb-1">ANALYZING INFRASTRUCTURE</p>
-            <h2 className="text-headline-lg font-headline-lg text-primary">Gym Booking SaaS</h2>
+            <h2 className="text-headline-lg font-headline-lg text-primary">{productName}</h2>
           </div>
 
-          {/* Score display */}
           <div className="text-center mb-stack-lg">
             <div className="inline-block relative">
               <svg className="w-28 h-28 -rotate-90" viewBox="0 0 100 100">
@@ -66,7 +116,6 @@ export default function Progress() {
             </div>
           </div>
 
-          {/* Steps */}
           <div className="flex flex-col gap-3">
             {steps.map((step, i) => {
               const done = i < current

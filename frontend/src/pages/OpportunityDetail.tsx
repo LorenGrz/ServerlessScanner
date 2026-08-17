@@ -1,11 +1,12 @@
 import { useParams, useNavigate } from 'react-router-dom'
 import Layout from '../components/Layout'
-import { mockAnalysis } from '../data/mockData'
+import { useAnalysis } from '../AnalysisContext'
 
 export default function OpportunityDetail() {
   const { id } = useParams()
   const navigate = useNavigate()
-  const opp = mockAnalysis.opportunities.find(o => o.id === id) ?? mockAnalysis.opportunities[0]
+  const { analysis } = useAnalysis()
+  const opp = analysis.opportunities.find(o => o.id === id) ?? analysis.opportunities[0]
 
   const badgeColor = (val: string) => {
     if (val === 'Low') return 'text-[#065F46] bg-[#ECFDF5]'
@@ -19,7 +20,7 @@ export default function OpportunityDetail() {
 
         {/* Opportunity nav */}
         <div className="flex items-center gap-2 flex-wrap">
-          {mockAnalysis.opportunities.map(o => (
+          {analysis.opportunities.map(o => (
             <button
               key={o.id}
               onClick={() => navigate(`/opportunity/${o.id}`)}

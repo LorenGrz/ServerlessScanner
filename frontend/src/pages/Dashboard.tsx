@@ -1,9 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Layout from '../components/Layout'
-import { mockAnalysis } from '../data/mockData'
-
-const { opportunities, doNotMigrate, roadmap, executiveSummary, score, estimatedAnnualSavings, confidence, complexityTier } = mockAnalysis
+import { useAnalysis } from '../AnalysisContext'
 
 function ScoreCounter({ target }: { target: number }) {
   const [val, setVal] = useState(0)
@@ -26,9 +24,11 @@ const roiBadge = (label: string) => {
 
 export default function Dashboard() {
   const navigate = useNavigate()
+  const { analysis } = useAnalysis()
+  const { opportunities, doNotMigrate, roadmap, executiveSummary, score, estimatedAnnualSavings, confidence, complexityTier } = analysis
 
   return (
-    <Layout title="Executive Dashboard" subtitle="Gym Booking SaaS">
+    <Layout title="Executive Dashboard" subtitle={analysis.productName}>
       <div className="flex flex-col gap-stack-lg">
 
         {/* Hero: Score + Summary */}

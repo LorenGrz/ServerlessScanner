@@ -1,4 +1,5 @@
 import { HashRouter as BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { AnalysisProvider } from './AnalysisContext'
 import NewAnalysis from './pages/NewAnalysis'
 import Progress from './pages/Progress'
 import Dashboard from './pages/Dashboard'
@@ -10,6 +11,7 @@ import Settings from './pages/Settings'
 
 export default function App() {
   return (
+    <AnalysisProvider>
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<Navigate to="/new" replace />} />
@@ -24,5 +26,6 @@ export default function App() {
         <Route path="*" element={<Navigate to="/new" replace />} />
       </Routes>
     </BrowserRouter>
+    </AnalysisProvider>
   )
 }

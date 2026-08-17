@@ -1,9 +1,9 @@
 import Layout from '../components/Layout'
-import { mockAnalysis } from '../data/mockData'
-
-const { productName, score, executiveSummary, opportunities, doNotMigrate, estimatedAnnualSavings, confidence, roadmap } = mockAnalysis
+import { useAnalysis } from '../AnalysisContext'
 
 export default function Export() {
+  const { analysis } = useAnalysis()
+  const { productName, score, executiveSummary, opportunities, doNotMigrate, estimatedAnnualSavings, confidence, roadmap } = analysis
   return (
     <Layout title="Export Report" subtitle="Migration brief ready to share">
       <div className="flex flex-col gap-stack-lg">

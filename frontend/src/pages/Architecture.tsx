@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom'
 import Layout from '../components/Layout'
-import { mockAnalysis } from '../data/mockData'
+import { useAnalysis } from '../AnalysisContext'
 
 const services = [
   { id: 'eventbridge', label: 'EventBridge', sublabel: 'Scheduler / Rules', icon: 'schedule', color: 'bg-secondary-container/20 text-on-secondary-container', connections: ['lambda1'] },
@@ -14,6 +14,7 @@ const services = [
 
 export default function Architecture() {
   const navigate = useNavigate()
+  const { analysis } = useAnalysis()
 
   return (
     <Layout title="AWS Target Architecture" subtitle="Proposed serverless service mapping">
@@ -38,7 +39,7 @@ export default function Architecture() {
           <div className="px-gutter py-4 border-b border-outline-variant bg-surface-container-lowest flex justify-between items-center flex-wrap gap-2">
             <div>
               <h3 className="text-headline-md font-headline-md">Full Architecture View</h3>
-              <p className="text-body-sm text-on-surface-variant">Gym Booking SaaS — Partial Serverless Migration</p>
+              <p className="text-body-sm text-on-surface-variant">{analysis.productName} — Partial Serverless Migration</p>
             </div>
             <div className="flex gap-2">
               <span className="px-3 py-1 bg-tertiary-fixed text-on-tertiary-fixed-variant rounded-full text-label-caps font-label-caps">Proposed</span>
@@ -111,7 +112,7 @@ export default function Architecture() {
         <div>
           <h4 className="text-headline-md font-headline-md mb-stack-md">Service Configuration</h4>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-gutter">
-            {mockAnalysis.opportunities.map(opp => (
+            {analysis.opportunities.map(opp => (
               <button
                 key={opp.id}
                 onClick={() => navigate(`/opportunity/${opp.id}`)}
@@ -138,7 +139,7 @@ export default function Architecture() {
             <h4 className="font-bold text-headline-md">Excluded from Migration</h4>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            {mockAnalysis.doNotMigrate.map(item => (
+            {analysis.doNotMigrate.map(item => (
               <div key={item.name} className="executive-card border-error/10 p-4 rounded-lg">
                 <p className="font-bold text-primary">{item.name}</p>
                 <p className="text-body-sm text-on-surface-variant mt-1">{item.reason}</p>
