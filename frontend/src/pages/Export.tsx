@@ -1,9 +1,17 @@
+import { useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import Layout from '../components/Layout'
 import { useAnalysis } from '../AnalysisContext'
 
 export default function Export() {
+  const navigate = useNavigate()
   const { analysis } = useAnalysis()
+
+  useEffect(() => { if (!analysis) navigate('/new') }, [analysis, navigate])
+  if (!analysis) return null
+
   const { productName, score, executiveSummary, opportunities, doNotMigrate, estimatedAnnualSavings, confidence, roadmap } = analysis
+
   return (
     <Layout title="Export Report" subtitle="Migration brief ready to share">
       <div className="flex flex-col gap-stack-lg">
@@ -18,7 +26,10 @@ export default function Export() {
               <span className="material-symbols-outlined text-[18px]">share</span>
               Share Link
             </button>
-            <button className="flex items-center gap-2 bg-primary text-on-primary px-5 py-3 rounded-lg font-bold text-label-caps font-label-caps hover:opacity-90 active:scale-[0.98] transition-all">
+            <button
+              onClick={() => window.print()}
+              className="flex items-center gap-2 bg-primary text-on-primary px-5 py-3 rounded-lg font-bold text-label-caps font-label-caps hover:opacity-90 active:scale-[0.98] transition-all"
+            >
               <span className="material-symbols-outlined text-[18px]">file_download</span>
               Download PDF
             </button>

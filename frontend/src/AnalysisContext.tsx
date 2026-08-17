@@ -1,7 +1,7 @@
 import { createContext, useContext, useState, ReactNode } from 'react'
-import { mockAnalysis } from './data/mockData'
+import type { Analysis } from './types'
 
-export type Analysis = typeof mockAnalysis
+export type { Analysis }
 
 export interface ScanParams {
   productName: string
@@ -10,35 +10,38 @@ export interface ScanParams {
 }
 
 interface AnalysisContextType {
-  analysis: Analysis
-  setAnalysis: (a: Analysis) => void
+  analysis: Analysis | null
+  setAnalysis: (a: Analysis | null) => void
   scanParams: ScanParams | null
   setScanParams: (p: ScanParams) => void
 }
 
 const AnalysisContext = createContext<AnalysisContextType>({
-  analysis: mockAnalysis,
+  analysis: null,
   setAnalysis: () => {},
   scanParams: null,
   setScanParams: () => {},
 })
 
-function loadStored(): Analysis {
+function loadStored(): Analysis | null {
   try {
     const raw = localStorage.getItem('scanner_analysis')
-    return raw ? (JSON.parse(raw) as Analysis) : mockAnalysis
+    return raw ? (JSON.parse(raw) as Analysis) : null
   } catch {
-    return mockAnalysis
+    return null
   }
 }
 
 export function AnalysisProvider({ children }: { children: ReactNode }) {
-  const [analysis, setAnalysisState] = useState<Analysis>(loadStored)
+  const [analysis, setAnalysisState] = useState<Analysis | null>(loadStored)
   const [scanParams, setScanParams] = useState<ScanParams | null>(null)
 
-  const setAnalysis = (a: Analysis) => {
+  const setAnalysis = (a: Analysis | null) => {
     setAnalysisState(a)
-    try { localStorage.setItem('scanner_analysis', JSON.stringify(a)) } catch { /* ignore */ }
+    try {
+      if (a) localStorage.setItem('scanner_analysis', JSON.stringify(a))
+      else localStorage.removeItem('scanner_analysis')
+    } catch { /* ignore */ }
   }
 
   return (

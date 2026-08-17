@@ -1,3 +1,5 @@
+import { useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import Layout from '../components/Layout'
 import { useAnalysis } from '../AnalysisContext'
 
@@ -14,17 +16,17 @@ const statusLabel: Record<string, string> = {
   roadmap: 'Roadmap',
 }
 
-const risks = [
-  { label: 'Latency Risk', value: 15, color: 'bg-on-tertiary-container', rating: 'Low', ratingColor: 'text-[#065F46]' },
-  { label: 'Data Integrity', value: 10, color: 'bg-on-tertiary-container', rating: 'Low', ratingColor: 'text-[#065F46]' },
-  { label: 'Complexity', value: 45, color: 'bg-secondary-container', rating: 'Medium', ratingColor: 'text-secondary' },
-]
-
 export default function Roadmap() {
+  const navigate = useNavigate()
   const { analysis } = useAnalysis()
+
+  useEffect(() => { if (!analysis) navigate('/new') }, [analysis, navigate])
+  if (!analysis) return null
+
   const { roadmap, estimatedAnnualSavings, confidence } = analysis
+
   return (
-    <Layout title="30-Day Roadmap" subtitle="Email Service Migration — Phase 1">
+    <Layout title="30-Day Roadmap" subtitle="Migration execution plan">
       <div className="flex flex-col gap-stack-lg">
 
         {/* Header stats */}
@@ -32,7 +34,7 @@ export default function Roadmap() {
           <div>
             <h1 className="text-headline-lg font-headline-lg text-primary tracking-tight">30-Day Migration Roadmap</h1>
             <p className="text-body-lg text-on-surface-variant mt-2 max-w-2xl">
-              Strategic execution plan for the Email Service migration. Focused on minimizing downtime and maximizing ROI.
+              Strategic execution plan for the migration. Focused on minimizing downtime and maximizing ROI.
             </p>
           </div>
           <div className="flex gap-3">
@@ -53,13 +55,13 @@ export default function Roadmap() {
             {roadmap.map((item, i) => (
               <div key={i} className="executive-card rounded-lg p-gutter roadmap-track hover:shadow-sm transition-all">
                 <div className="flex items-start gap-5 relative z-10">
-                  <div className={`w-10 h-10 rounded-full ${weekColors[i]} flex items-center justify-center shrink-0`}>
-                    <span className={`material-symbols-outlined ${weekTextColors[i]} text-[20px]`}>{item.icon}</span>
+                  <div className={`w-10 h-10 rounded-full ${weekColors[i] ?? 'bg-outline-variant'} flex items-center justify-center shrink-0`}>
+                    <span className={`material-symbols-outlined ${weekTextColors[i] ?? 'text-on-surface'} text-[20px]`}>{item.icon}</span>
                   </div>
                   <div className="flex-1">
                     <div className="flex justify-between items-center mb-stack-md flex-wrap gap-2">
                       <h3 className="text-headline-md font-headline-md text-primary">{item.week}: {item.title}</h3>
-                      <span className={`text-label-caps font-label-caps px-3 py-1 rounded ${statusBadge[item.status]}`}>{statusLabel[item.status]}</span>
+                      <span className={`text-label-caps font-label-caps px-3 py-1 rounded ${statusBadge[item.status] ?? ''}`}>{statusLabel[item.status] ?? item.status}</span>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                       {item.tasks.map(task => (
@@ -81,7 +83,7 @@ export default function Roadmap() {
             <div className="executive-card rounded-lg p-gutter">
               <div className="flex justify-between items-start mb-gutter">
                 <h4 className="text-label-caps font-label-caps text-on-surface-variant uppercase">ROI Matrix</h4>
-                <span className="text-headline-md font-bold text-primary">8.4</span>
+                <span className="text-headline-md font-bold text-primary">{confidence}</span>
               </div>
               <div className="relative h-44 w-full bg-surface-container rounded-lg p-3 flex flex-col justify-between overflow-hidden matrix-grid">
                 <div className="flex justify-between h-full relative">
@@ -101,14 +103,18 @@ export default function Roadmap() {
                   </div>
                 </div>
               </div>
-              <p className="text-body-sm text-on-surface-variant mt-3 italic text-[12px]">Email Service sits in high-impact, medium-complexity quadrant. Highly recommended path.</p>
+              <p className="text-body-sm text-on-surface-variant mt-3 italic text-[12px]">Top opportunity sits in high-impact, low-complexity quadrant.</p>
             </div>
 
             {/* Risk */}
             <div className="executive-card rounded-lg p-gutter">
               <h4 className="text-label-caps font-label-caps text-on-surface-variant uppercase mb-gutter">Risk Assessment</h4>
               <div className="flex flex-col gap-4">
-                {risks.map(r => (
+                {[
+                  { label: 'Latency Risk', value: 15, color: 'bg-on-tertiary-container', rating: 'Low', ratingColor: 'text-[#065F46]' },
+                  { label: 'Data Integrity', value: 10, color: 'bg-on-tertiary-container', rating: 'Low', ratingColor: 'text-[#065F46]' },
+                  { label: 'Complexity', value: 45, color: 'bg-secondary-container', rating: 'Medium', ratingColor: 'text-secondary' },
+                ].map(r => (
                   <div key={r.label}>
                     <div className="flex justify-between text-body-sm mb-1">
                       <span>{r.label}</span>
@@ -152,7 +158,7 @@ export default function Roadmap() {
             </div>
             <div>
               <p className="font-bold text-primary">Executive Action Required</p>
-              <p className="text-body-sm text-on-surface-variant">Approve infrastructure budget by Friday to maintain Day 1 start.</p>
+              <p className="text-body-sm text-on-surface-variant">Approve infrastructure budget to maintain Day 1 start.</p>
             </div>
           </div>
           <div className="flex gap-3">

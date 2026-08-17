@@ -28,7 +28,9 @@ export default function Sidebar() {
       <p className="px-4 text-[10px] font-bold text-outline-variant uppercase tracking-widest mb-2">Current Environment</p>
       <div className="flex items-center gap-3 px-4 py-2 mb-4 bg-surface-container-high rounded-lg border border-outline-variant">
         <span className="material-symbols-outlined text-primary icon-filled text-[18px]">fitness_center</span>
-        <span className="text-label-caps font-label-caps text-on-surface font-bold">{analysis.productName}</span>
+        <span className="text-label-caps font-label-caps text-on-surface font-bold">
+          {analysis?.productName ?? '—'}
+        </span>
       </div>
 
       <p className="px-4 text-[10px] font-bold text-outline-variant uppercase tracking-widest mb-2">Navigation</p>

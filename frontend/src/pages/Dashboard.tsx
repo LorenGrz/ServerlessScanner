@@ -22,10 +22,32 @@ const roiBadge = (label: string) => {
   return 'bg-surface-variant text-on-surface-variant'
 }
 
+const complexityToY = (c: string) => c === 'Low' ? '15%' : c === 'Medium' ? '48%' : '78%'
+
 export default function Dashboard() {
   const navigate = useNavigate()
   const { analysis } = useAnalysis()
-  const { opportunities, doNotMigrate, roadmap, executiveSummary, score, estimatedAnnualSavings, confidence, complexityTier } = analysis
+
+  useEffect(() => { if (!analysis) navigate('/new') }, [analysis, navigate])
+  if (!analysis) return null
+
+  const { opportunities, doNotMigrate, roadmap, executiveSummary, score, estimatedAnnualSavings, confidence, complexityTier, scoreDelta } = analysis
+  const topOpp = opportunities[0]
+
+  const matrixPoints = [
+    ...opportunities.slice(0, 4).map(opp => ({
+      label: opp.name,
+      x: `${opp.fit}%`,
+      y: complexityToY(opp.complexity),
+      color: opp.roiLabel === 'HIGH ROI' ? 'bg-primary' : 'bg-secondary-container',
+    })),
+    ...doNotMigrate.slice(0, 2).map(item => ({
+      label: item.name,
+      x: '18%',
+      y: '82%',
+      color: 'bg-error',
+    })),
+  ]
 
   return (
     <Layout title="Executive Dashboard" subtitle={analysis.productName}>
@@ -44,7 +66,7 @@ export default function Dashboard() {
               <div className="mt-3 flex items-center gap-2 flex-wrap">
                 <span className="bg-[#ECFDF5] text-[#065F46] px-3 py-1 rounded-full text-label-caps font-label-caps flex items-center gap-1">
                   <span className="material-symbols-outlined text-[14px]">trending_up</span>
-                  +12pts Since June
+                  {scoreDelta}
                 </span>
               </div>
             </div>
@@ -119,15 +141,8 @@ export default function Dashboard() {
             <div className="h-56 w-full border-l border-b border-outline-variant relative matrix-grid rounded-lg overflow-hidden">
               <div className="absolute bottom-[-22px] right-0 text-[10px] font-bold text-outline uppercase tracking-widest">Savings (ROI) →</div>
               <div className="absolute top-0 left-[-28px] text-[10px] font-bold text-outline uppercase tracking-widest origin-bottom-left -rotate-90 whitespace-nowrap">Complexity →</div>
-              {/* Target quadrant */}
               <div className="absolute top-0 right-0 w-1/2 h-1/2 bg-secondary-container/5 border border-dashed border-secondary-container/30" />
-              {/* Data points */}
-              {[
-                { label: 'Email Reminders', x: '72%', y: '15%', color: 'bg-primary' },
-                { label: 'Stripe Webhooks', x: '55%', y: '35%', color: 'bg-primary' },
-                { label: 'Monthly Reports', x: '80%', y: '45%', color: 'bg-secondary-container' },
-                { label: 'Booking DB', x: '20%', y: '80%', color: 'bg-error' },
-              ].map(pt => (
+              {matrixPoints.map(pt => (
                 <div key={pt.label} className="absolute group" style={{ right: `calc(100% - ${pt.x})`, bottom: `calc(100% - ${pt.y})`, transform: 'translate(50%, 50%)' }}>
                   <div className={`w-4 h-4 ${pt.color} rounded-full ring-4 ring-white cursor-pointer`} />
                   <div className="absolute bottom-full mb-1 left-1/2 -translate-x-1/2 bg-primary text-on-primary text-[10px] px-2 py-1 whitespace-nowrap rounded hidden group-hover:block z-10">
@@ -140,27 +155,27 @@ export default function Dashboard() {
         </div>
 
         {/* Recommended First Migration */}
-        <div className="bg-primary text-on-primary rounded-xl p-gutter md:p-margin-desktop grid grid-cols-1 md:grid-cols-3 gap-stack-lg items-center">
-          <div className="md:col-span-2">
-            <div className="flex items-center gap-2 mb-2">
-              <span className="material-symbols-outlined text-secondary-container icon-filled">stars</span>
-              <p className="text-label-caps font-label-caps text-secondary-container">RECOMMENDED FIRST STEP</p>
+        {topOpp && (
+          <div className="bg-primary text-on-primary rounded-xl p-gutter md:p-margin-desktop grid grid-cols-1 md:grid-cols-3 gap-stack-lg items-center">
+            <div className="md:col-span-2">
+              <div className="flex items-center gap-2 mb-2">
+                <span className="material-symbols-outlined text-secondary-container icon-filled">stars</span>
+                <p className="text-label-caps font-label-caps text-secondary-container">RECOMMENDED FIRST STEP</p>
+              </div>
+              <h3 className="text-headline-lg font-headline-lg leading-tight">Migration: {topOpp.name}</h3>
+              <p className="text-on-primary-container text-body-lg mt-4 max-w-xl opacity-90">{topOpp.detail}</p>
             </div>
-            <h3 className="text-headline-lg font-headline-lg leading-tight">Migration: Email Reminders Service</h3>
-            <p className="text-on-primary-container text-body-lg mt-4 max-w-xl opacity-90">
-              Current overhead for EC2-based mail workers is $1,200/mo with 84% idle time. Shifting to Lambda + SES reduces costs to ~$45/mo while increasing delivery reliability during peak booking hours.
-            </p>
+            <div className="flex flex-col gap-3">
+              <button
+                onClick={() => navigate(`/opportunity/${topOpp.id}`)}
+                className="bg-secondary-container text-on-secondary-container px-6 py-4 rounded-lg font-bold text-headline-md flex items-center justify-center gap-2 hover:opacity-90 active:scale-95 transition-all"
+              >
+                View Technical Plan <span className="material-symbols-outlined">arrow_forward</span>
+              </button>
+              <p className="text-center text-[11px] font-bold text-white/50 uppercase tracking-widest">Est. Completion: {topOpp.migrationDays} Business Days</p>
+            </div>
           </div>
-          <div className="flex flex-col gap-3">
-            <button
-              onClick={() => navigate('/opportunity/1')}
-              className="bg-secondary-container text-on-secondary-container px-6 py-4 rounded-lg font-bold text-headline-md flex items-center justify-center gap-2 hover:opacity-90 active:scale-95 transition-all"
-            >
-              View Technical Plan <span className="material-symbols-outlined">arrow_forward</span>
-            </button>
-            <p className="text-center text-[11px] font-bold text-white/50 uppercase tracking-widest">Est. Completion: 14 Business Days</p>
-          </div>
-        </div>
+        )}
 
         {/* Risk + Roadmap Preview */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-gutter">

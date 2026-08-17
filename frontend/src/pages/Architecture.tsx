@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Layout from '../components/Layout'
 import { useAnalysis } from '../AnalysisContext'
@@ -15,6 +16,9 @@ const services = [
 export default function Architecture() {
   const navigate = useNavigate()
   const { analysis } = useAnalysis()
+
+  useEffect(() => { if (!analysis) navigate('/new') }, [analysis, navigate])
+  if (!analysis) return null
 
   return (
     <Layout title="AWS Target Architecture" subtitle="Proposed serverless service mapping">

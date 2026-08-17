@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import Layout from '../components/Layout'
 import { useAnalysis } from '../AnalysisContext'
@@ -6,6 +7,10 @@ export default function OpportunityDetail() {
   const { id } = useParams()
   const navigate = useNavigate()
   const { analysis } = useAnalysis()
+
+  useEffect(() => { if (!analysis) navigate('/new') }, [analysis, navigate])
+  if (!analysis) return null
+
   const opp = analysis.opportunities.find(o => o.id === id) ?? analysis.opportunities[0]
 
   const badgeColor = (val: string) => {
