@@ -1,14 +1,11 @@
-import { useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
 import Layout from '../components/Layout'
+import NoScanPlaceholder from '../components/NoScanPlaceholder'
 import { useAnalysis } from '../AnalysisContext'
 
 export default function Export() {
-  const navigate = useNavigate()
   const { analysis } = useAnalysis()
 
-  useEffect(() => { if (!analysis) navigate('/new') }, [analysis, navigate])
-  if (!analysis) return null
+  if (!analysis) return <Layout title="Export Report" subtitle="Run a scan to get started"><NoScanPlaceholder /></Layout>
 
   const { productName, score, executiveSummary, opportunities, doNotMigrate, estimatedAnnualSavings, confidence, roadmap } = analysis
 

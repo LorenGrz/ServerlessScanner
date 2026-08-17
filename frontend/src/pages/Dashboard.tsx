@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Layout from '../components/Layout'
+import NoScanPlaceholder from '../components/NoScanPlaceholder'
 import { useAnalysis } from '../AnalysisContext'
 
 function ScoreCounter({ target }: { target: number }) {
@@ -28,8 +29,7 @@ export default function Dashboard() {
   const navigate = useNavigate()
   const { analysis } = useAnalysis()
 
-  useEffect(() => { if (!analysis) navigate('/new') }, [analysis, navigate])
-  if (!analysis) return null
+  if (!analysis) return <Layout title="Executive Dashboard" subtitle="Run a scan to get started"><NoScanPlaceholder /></Layout>
 
   const { opportunities, doNotMigrate, roadmap, executiveSummary, score, estimatedAnnualSavings, confidence, complexityTier, scoreDelta } = analysis
   const topOpp = opportunities[0]

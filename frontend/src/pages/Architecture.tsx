@@ -1,6 +1,6 @@
-import { useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Layout from '../components/Layout'
+import NoScanPlaceholder from '../components/NoScanPlaceholder'
 import { useAnalysis } from '../AnalysisContext'
 
 const services = [
@@ -17,8 +17,7 @@ export default function Architecture() {
   const navigate = useNavigate()
   const { analysis } = useAnalysis()
 
-  useEffect(() => { if (!analysis) navigate('/new') }, [analysis, navigate])
-  if (!analysis) return null
+  if (!analysis) return <Layout title="AWS Target Architecture" subtitle="Run a scan to get started"><NoScanPlaceholder /></Layout>
 
   return (
     <Layout title="AWS Target Architecture" subtitle="Proposed serverless service mapping">

@@ -1,6 +1,6 @@
-import { useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import Layout from '../components/Layout'
+import NoScanPlaceholder from '../components/NoScanPlaceholder'
 import { useAnalysis } from '../AnalysisContext'
 
 export default function OpportunityDetail() {
@@ -8,8 +8,7 @@ export default function OpportunityDetail() {
   const navigate = useNavigate()
   const { analysis } = useAnalysis()
 
-  useEffect(() => { if (!analysis) navigate('/new') }, [analysis, navigate])
-  if (!analysis) return null
+  if (!analysis) return <Layout title="Opportunities" subtitle="Run a scan to get started"><NoScanPlaceholder /></Layout>
 
   const opp = analysis.opportunities.find(o => o.id === id) ?? analysis.opportunities[0]
 

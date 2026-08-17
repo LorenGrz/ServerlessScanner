@@ -1,6 +1,5 @@
-import { useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
 import Layout from '../components/Layout'
+import NoScanPlaceholder from '../components/NoScanPlaceholder'
 import { useAnalysis } from '../AnalysisContext'
 
 const weekColors = ['bg-primary', 'bg-secondary-container', 'bg-on-tertiary-container']
@@ -17,11 +16,9 @@ const statusLabel: Record<string, string> = {
 }
 
 export default function Roadmap() {
-  const navigate = useNavigate()
   const { analysis } = useAnalysis()
 
-  useEffect(() => { if (!analysis) navigate('/new') }, [analysis, navigate])
-  if (!analysis) return null
+  if (!analysis) return <Layout title="30-Day Roadmap" subtitle="Run a scan to get started"><NoScanPlaceholder /></Layout>
 
   const { roadmap, estimatedAnnualSavings, confidence } = analysis
 
