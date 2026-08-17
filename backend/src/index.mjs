@@ -7,7 +7,7 @@ const __dirname = dirname(fileURLToPath(import.meta.url))
 const PUBLIC_DIR = join(__dirname, 'public')
 
 const bedrock = new BedrockRuntimeClient({ region: 'us-east-1' })
-const MODEL_ID = 'anthropic.claude-3-5-haiku-20241022-v1:0'
+const MODEL_ID = 'us.anthropic.claude-haiku-4-5-20251001-v1:0'
 
 const TEXT_TYPES = new Set(['text/html', 'application/javascript', 'text/css', 'application/json', 'image/svg+xml', 'font/woff', 'font/woff2'])
 
@@ -76,7 +76,7 @@ Return ONLY a valid JSON object — no markdown, no code fences, no explanation.
         {"phase": "Phase 2: <name>", "detail": "<description> (N days)"},
         {"phase": "Phase 3: <name>", "detail": "<description> (N days)"}
       ],
-      "codePreview": <AWS SAM YAML snippet as a string, use \\n for newlines>
+      "codePreview": <short AWS SAM YAML snippet, max 8 lines, use \\n for newlines>
     }
   ],
   "doNotMigrate": [
@@ -169,7 +169,7 @@ export const handler = async (event) => {
         accept: 'application/json',
         body: JSON.stringify({
           anthropic_version: 'bedrock-2023-05-31',
-          max_tokens: 4000,
+          max_tokens: 8192,
           messages: [{ role: 'user', content: [{ type: 'text', text: prompt }] }],
         }),
       })
