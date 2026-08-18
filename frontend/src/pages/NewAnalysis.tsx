@@ -4,25 +4,32 @@ import Layout from '../components/Layout'
 import { useAnalysis } from '../AnalysisContext'
 
 const stackOptions = [
-  'React (Frontend)',
-  'Express (Backend)',
-  'PostgreSQL (Database)',
-  'Stripe (Payments)',
-  'AWS S3 (Storage)',
-  'Redis (Cache)',
-  'MongoDB (Database)',
-  'Next.js (Frontend)',
+  // Frontend
+  'React', 'Next.js', 'Vue.js', 'Angular', 'Vite',
+  // Backend
+  'Node.js', 'Express', 'NestJS', 'Django', 'Flask', 'FastAPI', 'Spring Boot', 'Laravel', 'Rails', 'Go', 'Rust',
+  // Database
+  'PostgreSQL', 'MySQL', 'MongoDB', 'DynamoDB', 'Redis', 'SQLite', 'Supabase', 'Firebase',
+  // Payments & APIs
+  'Stripe', 'PayPal', 'Twilio', 'SendGrid',
+  // Infra / Cloud
+  'AWS EC2', 'AWS S3', 'AWS RDS', 'AWS Lambda', 'Docker', 'Kubernetes', 'Nginx',
+  // Messaging
+  'Kafka', 'RabbitMQ', 'SQS', 'SNS',
+  // Other
+  'GraphQL', 'REST API', 'TypeScript', 'Python', 'Java',
 ]
 
 const stackIcons: Record<string, string> = {
-  'React (Frontend)': 'javascript',
-  'Express (Backend)': 'terminal',
-  'PostgreSQL (Database)': 'database',
-  'Stripe (Payments)': 'payments',
-  'AWS S3 (Storage)': 'cloud',
-  'Redis (Cache)': 'memory',
-  'MongoDB (Database)': 'database',
-  'Next.js (Frontend)': 'web',
+  'React': 'javascript', 'Next.js': 'web', 'Vue.js': 'javascript', 'Angular': 'javascript', 'Vite': 'bolt',
+  'Node.js': 'terminal', 'Express': 'terminal', 'NestJS': 'terminal', 'Django': 'terminal', 'Flask': 'terminal',
+  'FastAPI': 'terminal', 'Spring Boot': 'terminal', 'Laravel': 'terminal', 'Rails': 'terminal', 'Go': 'terminal', 'Rust': 'terminal',
+  'PostgreSQL': 'database', 'MySQL': 'database', 'MongoDB': 'database', 'DynamoDB': 'database',
+  'Redis': 'memory', 'SQLite': 'database', 'Supabase': 'database', 'Firebase': 'database',
+  'Stripe': 'payments', 'PayPal': 'payments', 'Twilio': 'call', 'SendGrid': 'mail',
+  'AWS EC2': 'cloud', 'AWS S3': 'cloud', 'AWS RDS': 'cloud', 'AWS Lambda': 'cloud', 'Docker': 'storage', 'Kubernetes': 'hub', 'Nginx': 'dns',
+  'Kafka': 'sync', 'RabbitMQ': 'sync', 'SQS': 'sync', 'SNS': 'notifications',
+  'GraphQL': 'api', 'REST API': 'api', 'TypeScript': 'code', 'Python': 'code', 'Java': 'code',
 }
 
 type UploadedFile = {
@@ -43,7 +50,8 @@ export default function NewAnalysis() {
   const dropRef = useRef<HTMLDivElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [isDragOver, setIsDragOver] = useState(false)
-  const [stack, setStack] = useState(['React (Frontend)', 'Express (Backend)', 'PostgreSQL (Database)'])
+  const [stack, setStack] = useState(['React', 'Node.js', 'PostgreSQL'])
+  const [customStack, setCustomStack] = useState('')
   const [scanning, setScanning] = useState(false)
   const [productName, setProductName] = useState('')
   const [painPoints, setPainPoints] = useState('')
@@ -266,9 +274,32 @@ export default function NewAnalysis() {
                       className="flex items-center gap-1 px-3 py-1.5 border border-dashed border-outline-variant rounded-lg text-label-caps font-label-caps text-on-surface-variant hover:border-primary hover:text-primary transition-all text-[11px]"
                     >
                       <span className="material-symbols-outlined text-[14px]">add</span>
-                      {opt.split(' (')[0]}
+                      {opt}
                     </button>
                   ))}
+                </div>
+
+                <div className="mt-3 flex gap-2">
+                  <input
+                    className="flex-1 bg-surface-container-low border border-dashed border-outline-variant focus:border-primary focus:outline-none px-3 py-1.5 text-body-sm rounded-lg transition-all"
+                    placeholder="Add custom technology…"
+                    value={customStack}
+                    onChange={e => setCustomStack(e.target.value)}
+                    onKeyDown={e => {
+                      if (e.key === 'Enter' && customStack.trim()) {
+                        e.preventDefault()
+                        addStack(customStack.trim())
+                        setCustomStack('')
+                      }
+                    }}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => { if (customStack.trim()) { addStack(customStack.trim()); setCustomStack('') } }}
+                    className="px-3 py-1.5 bg-surface-container border border-outline-variant rounded-lg text-label-caps font-label-caps text-on-surface-variant hover:border-primary hover:text-primary transition-all"
+                  >
+                    <span className="material-symbols-outlined text-[16px]">add</span>
+                  </button>
                 </div>
               </div>
 
