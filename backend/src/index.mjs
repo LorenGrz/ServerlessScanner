@@ -28,102 +28,22 @@ const MIME = {
 
 function buildPrompt(productName, stack, painPoints) {
   const id = Date.now().toString()
-  return `You are an AWS serverless migration expert. Analyze this product and return a migration assessment JSON.
+  return `You are an AWS serverless migration consultant. Analyze the backend workloads and return JSON only — no markdown, no explanation.
 
 Product: ${productName}
 Stack: ${stack.join(', ')}
 Pain Points: ${painPoints || 'Not specified'}
 
-Return ONLY a valid JSON object — no markdown, no code fences, no explanation. Use this exact schema:
+ANALYSIS RULES:
+- Opportunities = specific backend processes to migrate (batch jobs, async tasks, webhooks, APIs, schedulers). NEVER suggest migrating a frontend framework (React, Vue, Angular, Next.js) — those are already serverless-compatible client assets.
+- doNotMigrate = backend services with high statefulness, tight latency requirements, or complex data dependencies (e.g. real-time websocket servers, large relational databases with complex transactions, monolithic session stores). NEVER list frontend frameworks or static assets here — they are irrelevant to this analysis.
+- estimatedAnnualSavings = realistic EC2/server cost reduction. Base estimate: $40k-$120k for small stacks (1-3 backend services), $120k-$400k for medium stacks (4-6 services), scale by complexity. Keep it grounded — do not inflate.
+- score = 0-100 reflecting how much of the stack is serverless-ready (high score = many stateless backend workloads present).
+- All string values max 120 chars. Exactly 3 opportunities, 2 doNotMigrate, 3 roadmap weeks.
 
-{
-  "id": "${id}",
-  "productName": "${productName}",
-  "score": <integer 0-100 serverless-readiness score>,
-  "scoreDelta": <string like "+8pts since last scan">,
-  "estimatedAnnualSavings": <total annual USD savings integer>,
-  "estimatedMonthlySavings": <total monthly USD savings integer>,
-  "complexityTier": <"Low"|"Medium-Low"|"Medium"|"Medium-High"|"High">,
-  "confidence": <integer 0-100>,
-  "executiveSummary": <2-3 sentence executive summary specific to this product>,
-  "stack": ${JSON.stringify(stack)},
-  "opportunities": [
-    {
-      "id": "1",
-      "rank": 1,
-      "name": <workflow name>,
-      "icon": <one of: mail|webhook|description|storage|notifications|terminal|hub|schedule|cloud|sync|bolt|settings_suggest|timer>,
-      "description": <one sentence>,
-      "detail": <2-3 sentences with specific cost and time estimates>,
-      "awsTarget": <"ServiceA + ServiceB + ServiceC">,
-      "awsServices": [<array of AWS service name strings>],
-      "fit": <integer 0-100>,
-      "savings": <"High"|"Medium"|"Low">,
-      "savingsAmount": <monthly USD integer>,
-      "complexity": <"Low"|"Medium"|"High">,
-      "risk": <"Low"|"Medium"|"High">,
-      "confidence": <"High"|"Medium"|"Low">,
-      "roiLabel": <"HIGH ROI"|"MEDIUM ROI"|"LOW ROI">,
-      "compositeScore": <float 1.0-5.0>,
-      "migrationDays": <integer>,
-      "architectureNodes": [
-        {"id": "src", "label": <source service>, "sublabel": <short detail>, "icon": <material-symbols name>, "type": "source"},
-        {"id": "fn", "label": "Lambda", "sublabel": "Node.js 22.x", "icon": "terminal", "type": "target"},
-        {"id": "sink", "label": <AWS target service>, "sublabel": <short detail>, "icon": <material-symbols name>, "type": "sink"}
-      ],
-      "timeline": [
-        {"phase": "Phase 1: <name>", "detail": "<description> (N days)"},
-        {"phase": "Phase 2: <name>", "detail": "<description> (N days)"},
-        {"phase": "Phase 3: <name>", "detail": "<description> (N days)"}
-      ],
-      "codePreview": <short AWS SAM YAML snippet, max 8 lines, use \\n for newlines>
-    }
-  ],
-  "doNotMigrate": [
-    {"name": <component name>, "reason": <why not serverless now>, "revisitWhen": <when to reconsider>}
-  ],
-  "roadmap": [
-    {
-      "week": "Week 1-2",
-      "title": <phase title>,
-      "icon": <material-symbols name like cloud_queue|mail|rocket_launch|settings>,
-      "status": "scheduled",
-      "tasks": [
-        {"id": "1.1", "label": <task description>, "done": false},
-        {"id": "1.2", "label": <task description>, "done": false},
-        {"id": "1.3", "label": <task description>, "done": false}
-      ]
-    },
-    {
-      "week": "Week 3",
-      "title": <phase title>,
-      "icon": <material-symbols name>,
-      "status": "pending",
-      "tasks": [
-        {"id": "2.1", "label": <task description>, "done": false},
-        {"id": "2.2", "label": <task description>, "done": false},
-        {"id": "2.3", "label": <task description>, "done": false}
-      ]
-    },
-    {
-      "week": "Week 4",
-      "title": <phase title>,
-      "icon": <material-symbols name>,
-      "status": "roadmap",
-      "tasks": [
-        {"id": "3.1", "label": <task description>, "done": false},
-        {"id": "3.2", "label": <task description>, "done": false},
-        {"id": "3.3", "label": <task description>, "done": false}
-      ]
-    }
-  ],
-  "openQuestions": [
-    {"text": <question about a migration blocker or risk>, "blocking": true},
-    {"text": <another question>, "blocking": false}
-  ]
-}
+{"id":"${id}","productName":"${productName}","score":<0-100>,"scoreDelta":"<+Npts vs industry avg>","estimatedAnnualSavings":<USD>,"estimatedMonthlySavings":<USD>,"complexityTier":"<Low|Medium-Low|Medium|Medium-High|High>","confidence":<0-100>,"executiveSummary":"<2 sentences on backend migration potential>","stack":${JSON.stringify(stack)},"opportunities":[{"id":"1","rank":1,"name":"<backend workload name>","icon":"<mail|webhook|description|storage|notifications|schedule|cloud|sync|bolt|timer>","description":"<1 sentence on what backend process this replaces>","detail":"<2 sentences with specific $ savings and AWS services>","awsTarget":"<Lambda + SQS + S3 style>","awsServices":["<svc>"],"fit":<0-100>,"savings":"<High|Medium|Low>","savingsAmount":<USD/mo>,"complexity":"<Low|Medium|High>","risk":"<Low|Medium|High>","confidence":"<High|Medium|Low>","roiLabel":"<HIGH ROI|MEDIUM ROI|LOW ROI>","compositeScore":<1.0-5.0>,"migrationDays":<N>,"architectureNodes":[{"id":"src","label":"<source system>","sublabel":"<current tech>","icon":"<symbol>","type":"source"},{"id":"fn","label":"Lambda","sublabel":"Node.js 22.x","icon":"terminal","type":"target"},{"id":"sink","label":"<downstream>","sublabel":"<AWS service>","icon":"<symbol>","type":"sink"}],"timeline":[{"phase":"Phase 1: <name>","detail":"<task> (N days)"},{"phase":"Phase 2: <name>","detail":"<task> (N days)"}],"codePreview":"Resources:\\n  Fn:\\n    Type: AWS::Serverless::Function\\n    Properties:\\n      Handler: index.handler\\n      Runtime: nodejs22.x"}],"doNotMigrate":[{"name":"<stateful backend component>","reason":"<technical reason it is not serverless-ready>","revisitWhen":"<condition or timeframe>"}],"roadmap":[{"week":"Week 1-2","title":"<title>","icon":"cloud_queue","status":"scheduled","tasks":[{"id":"1.1","label":"<task>","done":false},{"id":"1.2","label":"<task>","done":false}]},{"week":"Week 3","title":"<title>","icon":"bolt","status":"pending","tasks":[{"id":"2.1","label":"<task>","done":false},{"id":"2.2","label":"<task>","done":false}]},{"week":"Week 4","title":"<title>","icon":"rocket_launch","status":"roadmap","tasks":[{"id":"3.1","label":"<task>","done":false},{"id":"3.2","label":"<task>","done":false}]}],"openQuestions":[{"text":"<blocking technical question>","blocking":true},{"text":"<risk or dependency question>","blocking":false}]}
 
-Generate 2-4 opportunities ranked by ROI. Provide 1-3 do-not-migrate items. Use realistic USD amounts based on the stack. Respond with ONLY the JSON object.`
+Fill all <placeholders> with real values for this product. Return only the completed JSON.`
 }
 
 const OK = (body, contentType = 'text/html', binary = false) => ({
