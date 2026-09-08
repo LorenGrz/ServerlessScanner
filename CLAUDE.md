@@ -1,38 +1,42 @@
 # Contexto del proyecto
 
-**Serverless Scanner**: app web orientada a ejecutivos que analiza la
-infraestructura SaaS existente de una empresa y prioriza qué migrar a AWS
-serverless por ROI. Sube diagramas/capturas de arquitectura + descripción del
-stack → calcula un "Serverless Score" (0-100), ahorro anual estimado,
-matriz ahorro/complejidad, arquitectura AWS objetivo por servicio (con
-preview de código SAM), roadmap de migración a 30 días con checklist por
-fase, y sección "Do Not Migrate" con servicios que no conviene tocar y por
-qué.
+**Serverless Scanner**: SPA orientada a ejecutivos que analiza la infraestructura
+SaaS de una empresa y prioriza qué migrar a AWS serverless por ROI (Serverless
+Score 0-100, ahorro anual estimado, matriz ahorro/complejidad, arquitectura AWS
+objetivo por servicio, roadmap de 30 días, sección "Do Not Migrate").
 
-**Demo en vivo:** https://mfg9vwkgld.execute-api.us-east-1.amazonaws.com/prod/
+**Este repo es solo frontend.** La lógica de análisis (prompt de Bedrock/Claude +
+scoring) se extrajo al skill `serverless-scanner`
+(`github.com/LorenGrz/claude-skills`). El backend AWS (Lambda + API Gateway + SAM
++ Bedrock Claude Haiku 4.5) se dio de baja.
+
+**Demo (frontend):** https://lorengrz.github.io/ServerlessScanner/
 
 ## Stack
 
-- Frontend: React 18, TypeScript, Vite, Tailwind CSS, React Router
-  (hash-based, SPA servida desde Lambda).
-- Backend: AWS Lambda (Node.js 22.x, `arm64`, response streaming), API
-  Gateway REST, AWS SAM.
-- IA: **Amazon Bedrock, Claude Haiku 4.5** (reemplazó un mock inicial —
-  ver historial de commits, migró de mock a Bedrock real).
-- Gestor de paquetes: **npm** en el frontend (`package-lock.json` tracked) —
-  no pnpm, aunque el repo tiene un `pnpm-lock.yaml`/`pnpm-workspace.yaml`
-  sueltos y sin trackear (parecen accidentales, no se tocaron).
+- React 18, TypeScript, Vite, Tailwind CSS, React Router (hash-based SPA).
+- Deploy: GitHub Pages vía `.github/workflows/deploy-pages.yml` (build de
+  `frontend/` con `vite build --outDir dist`, push a `main`).
+- Gestor de paquetes: **npm** en `frontend/` (`package-lock.json` tracked). Hay
+  un `pnpm-lock.yaml`/`pnpm-workspace.yaml` sueltos y sin trackear en `frontend/`
+  que parecen accidentales — no se tocaron.
+- `frontend/src/api.ts` apunta a `VITE_API_URL`, con un fallback a una API
+  Gateway que ya no existe. Sin backend, las llamadas a `/api/scan` fallan; la
+  SPA se mantiene como pieza de portfolio / referencia de UI.
 
 ## Repos relacionados
 
-- `serverless-scanner-skill`: el skill de Claude para migrar detectar
-  oportunidades serverless (`serverless-scanner` en la lista de skills
-  globales), probablemente derivado de la lógica de análisis de este proyecto.
-- `landing-serverlessscanner`: landing estática de portfolio.
+- `serverless-scanner-skill` / skill `serverless-scanner`: la lógica de análisis
+  ya vive ahí.
+- `landing-serverlessscanner`: landing estática (GitHub Pages), sin AWS.
 
 ## Última revisión
 
-2026-09-04 — primera vez que se documenta en CLAUDE.md. Al momento de
-escribir esto había un cambio sin commitear en `backend/src/index.mjs` y los
-dos archivos de pnpm sueltos en `frontend/` mencionados arriba — no se
-tocaron, quedan para que Loren los revise.
+2026-09-07 — se dio de baja el backend de AWS y quedó el repo solo con
+`frontend/`.
+
+- `sam delete` del stack `serverless-scanner` (Lambda + API Gateway + rol IAM +
+  log group). No tenía DB ni secrets.
+- Se borraron `template.yaml`, `samconfig.toml`, `backend/` y `.aws-sam/` del
+  repo; `.gitignore` limpio de la entrada `.aws-sam/`.
+- El análisis quedó cubierto por el skill `serverless-scanner`.
